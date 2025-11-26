@@ -115,9 +115,8 @@ class SubscriptionProvider with ChangeNotifier {
 
     try {
       await _subscriptionService.cancelSubscription();
-      if (_currentSubscription != null) {
-        _currentSubscription!.status = 'cancelled';
-      }
+      // Refresh subscription to get updated status from backend
+      await fetchCurrentSubscription();
       _error = null;
     } catch (e) {
       _error = e.toString();

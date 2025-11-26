@@ -121,7 +121,7 @@ class AppTheme {
         fontFamily: fontFamily,
       ),
     ),
-    cardTheme: CardTheme(
+    cardTheme: CardThemeData(
       elevation: 0,
       color: surfaceColor,
       shape: RoundedRectangleBorder(

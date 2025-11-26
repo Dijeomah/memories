@@ -69,14 +69,14 @@ class _HomeScreenState extends State<HomeScreen> {
               return Card(
                 child: ListTile(
                   leading: const Icon(Icons.event, color: AppTheme.primaryColor),
-                  title: Text(event['title'] ?? ''),
-                  subtitle: Text(event['description'] ?? ''),
+                  title: Text(event.title),
+                  subtitle: Text(event.description ?? ''),
                   trailing: const Icon(Icons.chevron_right),
                   onTap: () {
                     Navigator.pushNamed(
                       context,
                       AppRoutes.eventDetail,
-                      arguments: event['id'],
+                      arguments: event.id,
                     );
                   },
                 ),

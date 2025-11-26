@@ -1,3 +1,5 @@
+import 'user.dart';
+
 class Event {
   final int id;
   final int creatorId;
@@ -87,6 +89,3 @@ class Event {
   double? get geofenceRadius =>
       settings?['geofence_radius']?.toDouble();
 }
-
-// Import User model
-import 'user.dart';

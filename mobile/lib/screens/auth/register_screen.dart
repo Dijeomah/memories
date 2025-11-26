@@ -63,11 +63,12 @@ class _RegisterScreenState extends State<RegisterScreen> {
   void _register() async {
     if (_formKey.currentState!.validate()) {
       try {
-        await context.read<AuthProvider>().register({
-          'name': _nameController.text,
-          'email': _emailController.text,
-          'password': _passwordController.text,
-        });
+        await context.read<AuthProvider>().register(
+          name: _nameController.text,
+          email: _emailController.text,
+          password: _passwordController.text,
+          passwordConfirmation: _passwordController.text,
+        );
         if (mounted) {
           Navigator.pushReplacementNamed(context, AppRoutes.home);
         }
