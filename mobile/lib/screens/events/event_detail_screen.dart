@@ -300,7 +300,7 @@ class _EventDetailScreenState extends State<EventDetailScreen>
             fit: StackFit.expand,
             children: [
               Image.network(
-                item.thumbnailUrl ?? item.fileUrl,
+                item.thumbnailPath ?? item.filePath,
                 fit: BoxFit.cover,
                 errorBuilder: (context, error, stackTrace) {
                   return Container(
@@ -440,7 +440,7 @@ class _EventDetailScreenState extends State<EventDetailScreen>
                           contentPadding: EdgeInsets.zero,
                           leading: const Icon(Icons.qr_code_scanner,
                               color: AppTheme.primaryColor),
-                          title: Text(scan.user?.name ?? 'Unknown User'),
+                          title: Text(scan.guest?.name ?? 'Unknown User'),
                           subtitle: Text(_formatDateTime(scan.scannedAt)),
                           trailing: scan.latitude != null && scan.longitude != null
                               ? const Icon(Icons.location_on, size: 16)
@@ -533,7 +533,7 @@ class _EventDetailScreenState extends State<EventDetailScreen>
   }
 
   int _getUniqueUsers(List scans) {
-    final uniqueUserIds = scans.map((scan) => scan.userId).toSet();
+    final uniqueUserIds = scans.map((scan) => scan.guestId).toSet();
     return uniqueUserIds.length;
   }
 

@@ -219,7 +219,26 @@ class EventProvider with ChangeNotifier {
     notifyListeners();
 
     try {
-      _recentMedia = await _mediaService.getMyMedia();
+      // First fetch all events
+      if (_events.isEmpty) {
+        await fetchEvents();
+      }
+
+      // Collect media from all events
+      final List<Media> allMedia = [];
+      for (final event in _events) {
+        try {
+          final media = await _mediaService.getMyMedia(event.id);
+          allMedia.addAll(media);
+        } catch (e) {
+          // Skip events with errors
+          continue;
+        }
+      }
+
+      // Sort by most recent
+      allMedia.sort((a, b) => b.createdAt.compareTo(a.createdAt));
+      _recentMedia = allMedia;
       _error = null;
     } catch (e) {
       _error = e.toString();

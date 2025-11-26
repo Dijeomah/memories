@@ -96,7 +96,7 @@ class _SubscriptionTabState extends State<SubscriptionTab> {
                           'Events',
                           plan.hasUnlimitedEvents
                               ? 'Unlimited'
-                              : '${plan.eventsLimit}',
+                              : '${plan.maxEvents}',
                           Icons.event,
                         ),
                         const SizedBox(height: 12),
@@ -110,23 +110,23 @@ class _SubscriptionTabState extends State<SubscriptionTab> {
                           'Guests per Event',
                           plan.hasUnlimitedGuests
                               ? 'Unlimited'
-                              : '${plan.guestsPerEventLimit}',
+                              : '${plan.maxGuestsPerEvent}',
                           Icons.people,
                         ),
                         const SizedBox(height: 12),
                         _buildFeatureRow(
                           'QR Code Sharing',
-                          plan.features['qr_code_sharing'] ?? false,
+                          plan.features.contains('qr_code_sharing'),
                         ),
                         const SizedBox(height: 12),
                         _buildFeatureRow(
                           'Geofencing',
-                          plan.features['geofencing'] ?? false,
+                          plan.features.contains('geofencing'),
                         ),
                         const SizedBox(height: 12),
                         _buildFeatureRow(
                           'Media Moderation',
-                          plan.features['media_moderation'] ?? false,
+                          plan.features.contains('media_moderation'),
                         ),
                       ],
                       if (subscription != null && subscription.endsAt != null) ...[

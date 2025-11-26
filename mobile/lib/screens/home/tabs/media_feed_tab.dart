@@ -100,7 +100,7 @@ class _MediaCard extends StatelessWidget {
                 children: [
                   // Thumbnail
                   Image.network(
-                    media.thumbnailUrl ?? media.fileUrl,
+                    media.thumbnailPath ?? media.filePath,
                     fit: BoxFit.cover,
                     errorBuilder: (context, error, stackTrace) {
                       return Container(
