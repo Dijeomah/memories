@@ -1,10 +1,10 @@
 class AppRoutes {
   static const String splash = '/';
-  static const String onboarding = '/onboarding';
+  static const String guestWelcome = '/guest-welcome';
   static const String login = '/login';
   static const String register = '/register';
 
-  // Main navigation
+  // Main navigation (Creator)
   static const String home = '/home';
   static const String events = '/events';
   static const String createEvent = '/events/create';
@@ -17,9 +17,8 @@ class AppRoutes {
 
   // Guest flow
   static const String scanQR = '/scan';
-  static const String joinEvent = '/join';
-  static const String guestUpload = '/guest/upload';
-  static const String guestGallery = '/guest/gallery';
+  static const String guestJoin = '/guest/join';
+  static const String guestEvent = '/guest/event';
 
   // Media
   static const String mediaViewer = '/media/viewer';

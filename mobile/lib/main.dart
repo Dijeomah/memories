@@ -15,6 +15,10 @@ import 'screens/events/event_detail_screen.dart';
 import 'screens/qr/scan_qr_screen.dart';
 import 'screens/subscription/subscription_screen.dart';
 import 'screens/profile/profile_screen.dart';
+import 'screens/guest/guest_welcome_screen.dart';
+import 'screens/guest/guest_join_screen.dart';
+import 'screens/guest/guest_event_screen.dart';
+import 'models/event.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -40,9 +44,10 @@ class MemoriesApp extends StatelessWidget {
         title: 'Memories',
         debugShowCheckedModeBanner: false,
         theme: AppTheme.lightTheme,
-        initialRoute: AppRoutes.splash,
+        initialRoute: AppRoutes.guestWelcome,
         routes: {
           AppRoutes.splash: (context) => const SplashScreen(),
+          AppRoutes.guestWelcome: (context) => const GuestWelcomeScreen(),
           AppRoutes.login: (context) => const LoginScreen(),
           AppRoutes.register: (context) => const RegisterScreen(),
           AppRoutes.home: (context) => const HomeScreen(),
@@ -57,6 +62,23 @@ class MemoriesApp extends StatelessWidget {
             final eventId = settings.arguments as int;
             return MaterialPageRoute(
               builder: (context) => EventDetailScreen(eventId: eventId),
+            );
+          }
+
+          if (settings.name == AppRoutes.guestJoin) {
+            final event = settings.arguments as Event;
+            return MaterialPageRoute(
+              builder: (context) => GuestJoinScreen(event: event),
+            );
+          }
+
+          if (settings.name == AppRoutes.guestEvent) {
+            final args = settings.arguments as Map<String, dynamic>;
+            return MaterialPageRoute(
+              builder: (context) => GuestEventScreen(
+                event: args['event'] as Event,
+                guestInfo: args['guestInfo'] as Map<String, dynamic>,
+              ),
             );
           }
 
