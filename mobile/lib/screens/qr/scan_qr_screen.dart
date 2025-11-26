@@ -128,15 +128,38 @@ class _ScanQRScreenState extends State<ScanQRScreen> {
           arguments: event,
         );
       }
-    } catch (e) {
+    } catch (e, stackTrace) {
       if (mounted) {
         setState(() => _isProcessing = false);
+
+        // Print error details for debugging
+        debugPrint('QR Scan Error: $e');
+        debugPrint('Stack trace: $stackTrace');
 
         showDialog(
           context: context,
           builder: (context) => AlertDialog(
             title: const Text('Error'),
-            content: Text('Failed to scan QR code: $e'),
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text('Failed to scan QR code:'),
+                const SizedBox(height: 8),
+                Text(
+                  e.toString(),
+                  style: const TextStyle(fontSize: 12, color: Colors.red),
+                ),
+                const SizedBox(height: 12),
+                const Text(
+                  'Please make sure:\n'
+                  '• You have an internet connection\n'
+                  '• The QR code is valid\n'
+                  '• The event is active',
+                  style: TextStyle(fontSize: 12),
+                ),
+              ],
+            ),
             actions: [
               TextButton(
                 onPressed: () => Navigator.pop(context),

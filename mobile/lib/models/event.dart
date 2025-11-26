@@ -37,22 +37,26 @@ class Event {
 
   factory Event.fromJson(Map<String, dynamic> json) {
     return Event(
-      id: json['id'],
-      creatorId: json['creator_id'],
-      title: json['title'],
+      id: json['id'] as int? ?? 0,
+      creatorId: json['creator_id'] as int? ?? 0,
+      title: json['title'] ?? '',
       description: json['description'],
       eventDate: json['event_date'] != null
           ? DateTime.parse(json['event_date'])
           : null,
       location: json['location'],
-      qrCodeData: json['qr_code_data'],
-      status: json['status'],
+      qrCodeData: json['qr_code_data'] ?? '',
+      status: json['status'] ?? 'draft',
       settings: json['settings'],
-      createdAt: DateTime.parse(json['created_at']),
-      updatedAt: DateTime.parse(json['updated_at']),
+      createdAt: json['created_at'] != null
+          ? DateTime.parse(json['created_at'])
+          : DateTime.now(),
+      updatedAt: json['updated_at'] != null
+          ? DateTime.parse(json['updated_at'])
+          : DateTime.now(),
       creator: json['creator'] != null ? User.fromJson(json['creator']) : null,
-      mediaCount: json['media_count'],
-      guestsCount: json['guests_count'],
+      mediaCount: json['media_count'] as int?,
+      guestsCount: json['guests_count'] as int?,
     );
   }
 
