@@ -44,7 +44,7 @@ class MemoriesApp extends StatelessWidget {
         title: 'Memories',
         debugShowCheckedModeBanner: false,
         theme: AppTheme.lightTheme,
-        initialRoute: AppRoutes.guestWelcome,
+        initialRoute: AppRoutes.splash,
         routes: {
           AppRoutes.splash: (context) => const SplashScreen(),
           AppRoutes.guestWelcome: (context) => const GuestWelcomeScreen(),
