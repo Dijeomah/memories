@@ -90,4 +90,89 @@ class User extends Authenticatable
     {
         return $this->hasMany(Media::class, 'uploader_id');
     }
+
+    /**
+     * User's subscription
+     */
+    public function subscription()
+    {
+        return $this->hasOne(UserSubscription::class)->latest();
+    }
+
+    /**
+     * All user's subscriptions
+     */
+    public function subscriptions()
+    {
+        return $this->hasMany(UserSubscription::class);
+    }
+
+    /**
+     * User's subscription transactions
+     */
+    public function subscriptionTransactions()
+    {
+        return $this->hasMany(SubscriptionTransaction::class);
+    }
+
+    /**
+     * Get user's active subscription
+     */
+    public function activeSubscription()
+    {
+        return $this->subscription()
+            ->where('status', 'active')
+            ->where(function ($query) {
+                $query->whereNull('ends_at')
+                      ->orWhere('ends_at', '>', now());
+            });
+    }
+
+    /**
+     * Check if user has an active subscription
+     */
+    public function hasActiveSubscription(): bool
+    {
+        return $this->activeSubscription()->exists();
+    }
+
+    /**
+     * Check if user is subscribed to a specific plan
+     */
+    public function subscribedTo(string $planSlug): bool
+    {
+        return $this->activeSubscription()
+            ->whereHas('plan', function ($query) use ($planSlug) {
+                $query->where('slug', $planSlug);
+            })
+            ->exists();
+    }
+
+    /**
+     * Get user's current plan
+     */
+    public function currentPlan()
+    {
+        $subscription = $this->activeSubscription()->with('plan')->first();
+        return $subscription ? $subscription->plan : null;
+    }
+
+    /**
+     * Check if user can create more events
+     */
+    public function canCreateEvent(): bool
+    {
+        $plan = $this->currentPlan();
+
+        if (!$plan) {
+            return false;
+        }
+
+        if ($plan->hasUnlimitedEvents()) {
+            return true;
+        }
+
+        $eventCount = $this->createdEvents()->count();
+        return $eventCount < $plan->max_events;
+    }
 }
