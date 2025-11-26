@@ -4,6 +4,8 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\User;
+use App\Models\SubscriptionPlan;
+use App\Models\UserSubscription;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\ValidationException;
@@ -31,6 +33,20 @@ class AuthController extends Controller
             'password' => Hash::make($validated['password']),
             'role' => 'creator',
         ]);
+
+        // Auto-assign Free plan to new users
+        $freePlan = SubscriptionPlan::where('slug', 'free')->first();
+
+        if ($freePlan) {
+            UserSubscription::create([
+                'user_id' => $user->id,
+                'plan_id' => $freePlan->id,
+                'status' => 'active',
+                'starts_at' => now(),
+                'ends_at' => null, // Free plan doesn't expire
+                'auto_renew' => false,
+            ]);
+        }
 
         $token = $user->createToken('auth-token')->plainTextToken;
 
