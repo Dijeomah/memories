@@ -14,6 +14,7 @@ class EventProvider with ChangeNotifier {
   List<Event> _events = [];
   Event? _currentEvent;
   List<Media> _eventMedia = [];
+  List<Media> _recentMedia = [];
   List<User> _eventGuests = [];
   List<QrScan> _eventScans = [];
   QrScanStats? _scanStats;
@@ -24,6 +25,7 @@ class EventProvider with ChangeNotifier {
   List<Event> get events => _events;
   Event? get currentEvent => _currentEvent;
   List<Media> get eventMedia => _eventMedia;
+  List<Media> get recentMedia => _recentMedia;
   List<User> get eventGuests => _eventGuests;
   List<QrScan> get eventScans => _eventScans;
   QrScanStats? get scanStats => _scanStats;
@@ -200,6 +202,24 @@ class EventProvider with ChangeNotifier {
 
     try {
       _eventMedia = await _eventService.getEventMedia(id);
+      _error = null;
+    } catch (e) {
+      _error = e.toString();
+      rethrow;
+    } finally {
+      _isLoading = false;
+      notifyListeners();
+    }
+  }
+
+  // Fetch recent media across all events
+  Future<void> fetchRecentMedia() async {
+    _isLoading = true;
+    _error = null;
+    notifyListeners();
+
+    try {
+      _recentMedia = await _mediaService.getMyMedia();
       _error = null;
     } catch (e) {
       _error = e.toString();
