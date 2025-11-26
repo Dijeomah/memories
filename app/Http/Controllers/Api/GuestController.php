@@ -7,6 +7,7 @@ use App\Models\Event;
 use App\Models\User;
 use App\Models\EventGuest;
 use App\Models\Media;
+use App\Models\QrScan;
 use App\Contracts\StorageServiceInterface;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
@@ -29,6 +30,8 @@ class GuestController extends Controller
     {
         $validated = $request->validate([
             'qr_code_data' => 'required|string',
+            'latitude' => 'nullable|numeric',
+            'longitude' => 'nullable|numeric',
         ]);
 
         $event = Event::where('qr_code_data', $validated['qr_code_data'])
@@ -42,6 +45,31 @@ class GuestController extends Controller
             ], 403);
         }
 
+        // Track QR scan
+        $locationData = null;
+        if (isset($validated['latitude']) && isset($validated['longitude'])) {
+            $locationData = [
+                'latitude' => $validated['latitude'],
+                'longitude' => $validated['longitude'],
+            ];
+        }
+
+        QrScan::create([
+            'event_id' => $event->id,
+            'qr_code_data' => $validated['qr_code_data'],
+            'ip_address' => $request->ip(),
+            'user_agent' => $request->userAgent(),
+            'location_data' => $locationData,
+            'guest_id' => $request->user() ? $request->user()->id : null,
+            'scanned_at' => now(),
+        ]);
+
+        // Get geofence info if enabled
+        $geofenceInfo = null;
+        if ($event->hasGeofence()) {
+            $geofenceInfo = $event->getGeofence();
+        }
+
         return response()->json([
             'event' => [
                 'id' => $event->id,
@@ -50,6 +78,7 @@ class GuestController extends Controller
                 'event_date' => $event->event_date,
                 'location' => $event->location,
                 'creator_name' => $event->creator->name,
+                'geofence' => $geofenceInfo,
             ],
         ]);
     }
@@ -129,7 +158,33 @@ class GuestController extends Controller
         $validated = $request->validate([
             'file' => 'required|file|mimes:jpg,jpeg,png,gif,mp4,mov,avi|max:102400', // 100MB max
             'caption' => 'nullable|string|max:500',
+            'latitude' => 'nullable|numeric',
+            'longitude' => 'nullable|numeric',
         ]);
+
+        // Check geofencing if enabled
+        if ($event->hasGeofence()) {
+            if (!isset($validated['latitude']) || !isset($validated['longitude'])) {
+                return response()->json([
+                    'message' => 'Location required for this event',
+                    'error' => 'This event requires location data. Please enable GPS and try again.',
+                ], 400);
+            }
+
+            $isWithinGeofence = $event->isWithinGeofence(
+                $validated['latitude'],
+                $validated['longitude']
+            );
+
+            if (!$isWithinGeofence) {
+                $geofence = $event->getGeofence();
+                return response()->json([
+                    'message' => 'Outside event location',
+                    'error' => 'You must be within ' . $geofence['radius_meters'] . ' meters of the event location to upload media.',
+                    'geofence' => $geofence,
+                ], 403);
+            }
+        }
 
         $file = $request->file('file');
 
@@ -150,6 +205,22 @@ class GuestController extends Controller
             $thumbnailPath = $this->storageService->generateVideoThumbnail($uploadResult['public_id']);
         }
 
+        // Prepare metadata
+        $metadata = [
+            'public_id' => $uploadResult['public_id'],
+            'format' => $uploadResult['format'],
+            'width' => $uploadResult['width'] ?? null,
+            'height' => $uploadResult['height'] ?? null,
+        ];
+
+        // Add location data if provided
+        if (isset($validated['latitude']) && isset($validated['longitude'])) {
+            $metadata['location'] = [
+                'latitude' => $validated['latitude'],
+                'longitude' => $validated['longitude'],
+            ];
+        }
+
         // Create media record
         $media = Media::create([
             'event_id' => $event->id,
@@ -160,12 +231,7 @@ class GuestController extends Controller
             'thumbnail_path' => $thumbnailPath,
             'caption' => $validated['caption'] ?? null,
             'status' => 'approved', // Auto-approve by default
-            'metadata' => [
-                'public_id' => $uploadResult['public_id'],
-                'format' => $uploadResult['format'],
-                'width' => $uploadResult['width'] ?? null,
-                'height' => $uploadResult['height'] ?? null,
-            ],
+            'metadata' => $metadata,
         ]);
 
         return response()->json([

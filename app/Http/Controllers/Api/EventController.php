@@ -4,9 +4,11 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\Event;
+use App\Models\QrScan;
 use App\Services\QRCodeService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\DB;
 use ZipArchive;
 
 class EventController extends Controller
@@ -219,6 +221,91 @@ class EventController extends Controller
             'message' => 'Media list retrieved successfully',
             'media' => $mediaUrls,
             'total' => $media->count(),
+        ]);
+    }
+
+    /**
+     * Get QR scan history
+     *
+     * GET /api/events/{id}/scans
+     */
+    public function getQRScans(Request $request, $id)
+    {
+        $event = Event::where('creator_id', $request->user()->id)
+            ->findOrFail($id);
+
+        $scans = $event->qrScans()
+            ->with('guest:id,name,email')
+            ->latest('scanned_at')
+            ->paginate(50);
+
+        return response()->json($scans);
+    }
+
+    /**
+     * Get QR scan statistics
+     *
+     * GET /api/events/{id}/scans/stats
+     */
+    public function getQRScanStats(Request $request, $id)
+    {
+        $event = Event::where('creator_id', $request->user()->id)
+            ->findOrFail($id);
+
+        // Total scans
+        $totalScans = $event->qrScans()->count();
+
+        // Unique scanners (based on IP)
+        $uniqueScanners = $event->qrScans()
+            ->distinct('ip_address')
+            ->count('ip_address');
+
+        // Scans with location data
+        $scansWithLocation = $event->qrScans()
+            ->whereNotNull('location_data')
+            ->count();
+
+        // Scans by registered guests
+        $scansByGuests = $event->qrScans()
+            ->whereNotNull('guest_id')
+            ->distinct('guest_id')
+            ->count('guest_id');
+
+        // Scans over time (last 30 days)
+        $scansOverTime = $event->qrScans()
+            ->where('scanned_at', '>=', now()->subDays(30))
+            ->select(DB::raw('DATE(scanned_at) as date'), DB::raw('count(*) as count'))
+            ->groupBy('date')
+            ->orderBy('date', 'asc')
+            ->get();
+
+        // Top locations (if location data exists)
+        $topLocations = $event->qrScans()
+            ->whereNotNull('location_data')
+            ->select('location_data')
+            ->get()
+            ->map(function ($scan) {
+                return $scan->location_data;
+            })
+            ->filter()
+            ->take(10);
+
+        // Most active hours
+        $scansbyHour = $event->qrScans()
+            ->select(DB::raw('HOUR(scanned_at) as hour'), DB::raw('count(*) as count'))
+            ->groupBy('hour')
+            ->orderBy('count', 'desc')
+            ->get();
+
+        return response()->json([
+            'total_scans' => $totalScans,
+            'unique_scanners' => $uniqueScanners,
+            'scans_with_location' => $scansWithLocation,
+            'scans_by_registered_guests' => $scansByGuests,
+            'conversion_rate' => $totalScans > 0 ? round(($scansByGuests / $totalScans) * 100, 2) : 0,
+            'scans_over_time' => $scansOverTime,
+            'scans_by_hour' => $scansbyHour,
+            'top_locations' => $topLocations,
         ]);
     }
 }
