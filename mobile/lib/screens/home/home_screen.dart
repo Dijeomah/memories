@@ -21,7 +21,10 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   void _loadEvents() {
-    context.read<EventProvider>().fetchEvents();
+    // Defer API call until after the first frame to avoid calling setState during build
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      context.read<EventProvider>().fetchEvents();
+    });
   }
 
   @override
