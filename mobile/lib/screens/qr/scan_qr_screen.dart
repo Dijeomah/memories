@@ -16,6 +16,8 @@ class ScanQRScreen extends StatefulWidget {
 class _ScanQRScreenState extends State<ScanQRScreen> {
   MobileScannerController cameraController = MobileScannerController();
   bool _isProcessing = false;
+  bool _isTorchOn = false;
+
 
   @override
   Widget build(BuildContext context) {
@@ -24,21 +26,16 @@ class _ScanQRScreenState extends State<ScanQRScreen> {
         title: const Text('Scan QR Code'),
         actions: [
           IconButton(
-            icon: ValueListenableBuilder(
-              valueListenable: cameraController.torchState,
-              builder: (context, state, child) {
-                switch (state) {
-                  case TorchState.off:
-                    return const Icon(Icons.flash_off, color: Colors.grey);
-                  case TorchState.on:
-                    return const Icon(Icons.flash_on, color: Colors.yellow);
-                }
-              },
-            ),
-            onPressed: () => cameraController.toggleTorch(),
+            icon: Icon(_isTorchOn ? Icons.flash_on : Icons.flash_off),
+            onPressed: () {
+              cameraController.toggleTorch();
+              setState(() {
+                _isTorchOn = !_isTorchOn;
+              });
+            },
           ),
           IconButton(
-            icon: const Icon(Icons.flip_camera_ios),
+            icon: const Icon(Icons.cameraswitch),
             onPressed: () => cameraController.switchCamera(),
           ),
         ],
