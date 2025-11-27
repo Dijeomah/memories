@@ -1,3 +1,4 @@
+import 'dart:io';
 import '../config/api_config.dart';
 import '../models/event.dart';
 import '../models/media.dart';
@@ -29,18 +30,40 @@ class EventService {
     String? location,
     String? status,
     Map<String, dynamic>? settings,
+    File? eventImage,
   }) async {
-    final response = await _api.post(
-      ApiConfig.events,
-      {
+    final Map<String, dynamic> response;
+
+    if (eventImage != null) {
+      // Use multipart upload when image is provided
+      final additionalFields = <String, String>{
         'title': title,
         if (description != null) 'description': description,
         if (eventDate != null) 'event_date': eventDate.toIso8601String(),
         if (location != null) 'location': location,
         if (status != null) 'status': status,
-        if (settings != null) 'settings': settings,
-      },
-    );
+      };
+
+      response = await _api.uploadFile(
+        ApiConfig.events,
+        eventImage,
+        'event_image',
+        additionalFields: additionalFields,
+      );
+    } else {
+      // Use regular POST when no image
+      response = await _api.post(
+        ApiConfig.events,
+        {
+          'title': title,
+          if (description != null) 'description': description,
+          if (eventDate != null) 'event_date': eventDate.toIso8601String(),
+          if (location != null) 'location': location,
+          if (status != null) 'status': status,
+          if (settings != null) 'settings': settings,
+        },
+      );
+    }
 
     return Event.fromJson(response['event']);
   }
@@ -54,18 +77,41 @@ class EventService {
     String? location,
     String? status,
     Map<String, dynamic>? settings,
+    File? eventImage,
   }) async {
-    final response = await _api.put(
-      ApiConfig.eventDetail(id),
-      {
+    final Map<String, dynamic> response;
+
+    if (eventImage != null) {
+      // Use multipart upload when image is provided
+      final additionalFields = <String, String>{
         if (title != null) 'title': title,
         if (description != null) 'description': description,
         if (eventDate != null) 'event_date': eventDate.toIso8601String(),
         if (location != null) 'location': location,
         if (status != null) 'status': status,
-        if (settings != null) 'settings': settings,
-      },
-    );
+        '_method': 'PUT', // Laravel needs this for multipart PUT requests
+      };
+
+      response = await _api.uploadFile(
+        ApiConfig.eventDetail(id),
+        eventImage,
+        'event_image',
+        additionalFields: additionalFields,
+      );
+    } else {
+      // Use regular PUT when no image
+      response = await _api.put(
+        ApiConfig.eventDetail(id),
+        {
+          if (title != null) 'title': title,
+          if (description != null) 'description': description,
+          if (eventDate != null) 'event_date': eventDate.toIso8601String(),
+          if (location != null) 'location': location,
+          if (status != null) 'status': status,
+          if (settings != null) 'settings': settings,
+        },
+      );
+    }
 
     return Event.fromJson(response['event']);
   }

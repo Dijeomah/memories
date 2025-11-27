@@ -170,7 +170,7 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
                 ),
                 child: Text(
                   _selectedDate != null
-                      ? '\${_selectedDate!.day}/\${_selectedDate!.month}/\${_selectedDate!.year}'
+                      ? '${_selectedDate!.day}/${_selectedDate!.month}/${_selectedDate!.year}'
                       : 'Select date',
                   style: _selectedDate != null
                       ? AppTheme.bodyMedium
@@ -364,7 +364,7 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
       if (widget.event != null) {
         // Update existing event
         await eventProvider.updateEvent(
-          eventId: widget.event!.id,
+          id: widget.event!.id,
           title: _titleController.text,
           description: _descriptionController.text.isEmpty ? null : _descriptionController.text,
           eventDate: _selectedDate,
@@ -396,7 +396,7 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Failed to \${widget.event != null ? 'update' : 'create'} event: $e'),
+            content: Text('Failed to ${widget.event != null ? 'update' : 'create'} event: $e'),
             backgroundColor: AppTheme.errorColor,
           ),
         );

@@ -75,6 +75,7 @@ class EventProvider with ChangeNotifier {
     DateTime? eventDate,
     String? location,
     String? status,
+    File? eventImage,
     bool? enableGeofence,
     double? geofenceLatitude,
     double? geofenceLongitude,
@@ -102,6 +103,7 @@ class EventProvider with ChangeNotifier {
         location: location,
         status: status,
         settings: settings,
+        eventImage: eventImage,
       );
 
       _events.insert(0, event);
@@ -124,6 +126,7 @@ class EventProvider with ChangeNotifier {
     DateTime? eventDate,
     String? location,
     String? status,
+    File? eventImage,
     Map<String, dynamic>? settings,
   }) async {
     _isLoading = true;
@@ -139,6 +142,7 @@ class EventProvider with ChangeNotifier {
         location: location,
         status: status,
         settings: settings,
+        eventImage: eventImage,
       );
 
       // Update in list
