@@ -56,15 +56,15 @@ class _GuestEventScreenState extends State<GuestEventScreen> {
           final media = provider.eventMedia;
 
           if (media.isEmpty) {
-            return Center(
+            return const Center(
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   Icon(Icons.photo_library, size: 100, color: AppTheme.textSecondary),
-                  const SizedBox(height: 16),
-                  const Text('No photos yet', style: AppTheme.heading3),
-                  const SizedBox(height: 8),
-                  const Text(
+                  SizedBox(height: 16),
+                  Text('No photos yet', style: AppTheme.heading3),
+                  SizedBox(height: 8),
+                  Text(
                     'Be the first to upload!',
                     style: AppTheme.bodyMedium,
                   ),
