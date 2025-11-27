@@ -3,11 +3,28 @@
 namespace App\Services\Storage;
 
 use App\Contracts\StorageServiceInterface;
-use CloudinaryLabs\CloudinaryLaravel\Facades\Cloudinary;
+use Cloudinary\Cloudinary;
+use Cloudinary\Transformation\Resize;
 use Illuminate\Http\UploadedFile;
 
 class CloudinaryStorageService implements StorageServiceInterface
 {
+    protected Cloudinary $cloudinary;
+
+    public function __construct()
+    {
+        $this->cloudinary = new Cloudinary([
+            'cloud' => [
+                'cloud_name' => config('services.cloudinary.cloud_name'),
+                'api_key' => config('services.cloudinary.api_key'),
+                'api_secret' => config('services.cloudinary.api_secret'),
+            ],
+            'url' => [
+                'secure' => true
+            ]
+        ]);
+    }
+
     /**
      * Upload a file to Cloudinary
      *
@@ -21,19 +38,22 @@ class CloudinaryStorageService implements StorageServiceInterface
         $resourceType = $this->getResourceType($file);
 
         $uploadOptions = array_merge([
-            'folder' => $folder ?: config('cloudinary.upload_preset'),
+            'folder' => $folder,
             'resource_type' => $resourceType,
         ], $options);
 
-        $result = Cloudinary::upload($file->getRealPath(), $uploadOptions);
+        $result = $this->cloudinary->uploadApi()->upload(
+            $file->getRealPath(),
+            $uploadOptions
+        );
 
         return [
-            'url' => $result->getSecurePath(),
-            'public_id' => $result->getPublicId(),
-            'format' => $result->getExtension(),
-            'size' => $result->getSize(),
-            'width' => $result->getWidth() ?? null,
-            'height' => $result->getHeight() ?? null,
+            'url' => $result['secure_url'],
+            'public_id' => $result['public_id'],
+            'format' => $result['format'],
+            'size' => $result['bytes'],
+            'width' => $result['width'] ?? null,
+            'height' => $result['height'] ?? null,
             'resource_type' => $resourceType,
         ];
     }
@@ -47,9 +67,10 @@ class CloudinaryStorageService implements StorageServiceInterface
     public function delete(string $publicId): bool
     {
         try {
-            Cloudinary::destroy($publicId);
+            $this->cloudinary->uploadApi()->destroy($publicId);
             return true;
         } catch (\Exception $e) {
+            \Log::error('Cloudinary delete error: ' . $e->getMessage());
             return false;
         }
     }
@@ -64,10 +85,12 @@ class CloudinaryStorageService implements StorageServiceInterface
     public function getUrl(string $publicId, array $transformations = []): string
     {
         if (empty($transformations)) {
-            return Cloudinary::getUrl($publicId);
+            return $this->cloudinary->image($publicId)->toUrl();
         }
 
-        return Cloudinary::getUrl($publicId, $transformations);
+        return $this->cloudinary->image($publicId)
+            ->resize(Resize::fill($transformations['width'] ?? 300, $transformations['height'] ?? 300))
+            ->toUrl();
     }
 
     /**
@@ -79,19 +102,13 @@ class CloudinaryStorageService implements StorageServiceInterface
      */
     public function generateVideoThumbnail(string $publicId, array $options = []): string
     {
-        $defaultOptions = [
-            'resource_type' => 'video',
-            'format' => 'jpg',
-            'transformation' => [
-                'width' => 300,
-                'height' => 300,
-                'crop' => 'fill',
-            ]
-        ];
+        $width = $options['width'] ?? 300;
+        $height = $options['height'] ?? 300;
 
-        $options = array_merge($defaultOptions, $options);
-
-        return Cloudinary::getUrl($publicId, $options);
+        return $this->cloudinary->video($publicId)
+            ->resize(Resize::fill($width, $height))
+            ->format('jpg')
+            ->toUrl();
     }
 
     /**
