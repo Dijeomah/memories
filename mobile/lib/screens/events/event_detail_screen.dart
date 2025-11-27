@@ -453,7 +453,7 @@ class _EventDetailScreenState extends State<EventDetailScreen>
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text('Recent Scans', style: AppTheme.heading3),
+                    const Text('Recent Scans', style: AppTheme.heading3),
                     const SizedBox(height: 16),
                     ListView.separated(
                       shrinkWrap: true,
@@ -473,7 +473,7 @@ class _EventDetailScreenState extends State<EventDetailScreen>
                           trailing: scan.latitude != null && scan.longitude != null
                               ? const HugeIcon(
                                   icon: HugeIcons.strokeRoundedLocation01,
-                                  size: 16,
+                                  size: 16, color: Colors.white,
                                 )
                               : null,
                         );

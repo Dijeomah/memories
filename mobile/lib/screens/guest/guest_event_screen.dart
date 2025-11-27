@@ -160,7 +160,7 @@ class _GuestEventScreenState extends State<GuestEventScreen> {
       floatingActionButton: FloatingActionButton(
         onPressed: () => _showCameraOptions(),
         backgroundColor: AppTheme.primaryColor,
-        child: const Icon(Icons.camera_alt),
+        child: const Icon(Icons.camera_alt_outlined, color: Colors.white,),
       ),
     );
   }
