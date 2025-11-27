@@ -7,6 +7,7 @@ import '../../config/app_theme.dart';
 import '../../providers/event_provider.dart';
 import '../../models/event.dart';
 import '../media/media_viewer_screen.dart';
+import 'create_event_screen.dart';
 
 class EventDetailScreen extends StatefulWidget {
   final int eventId;
@@ -621,9 +622,18 @@ class _EventDetailScreenState extends State<EventDetailScreen>
                 color: AppTheme.primaryColor,
               ),
               title: const Text('Edit Event'),
-              onTap: () {
+              onTap: () async {
                 Navigator.pop(context);
-                // TODO: Navigate to edit event screen
+                final result = await Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => CreateEventScreen(event: event),
+                  ),
+                );
+                if (result == true && mounted) {
+                  // Reload event data after edit
+                  _loadEventData();
+                }
               },
             ),
             ListTile(
