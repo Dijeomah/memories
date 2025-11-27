@@ -7,6 +7,7 @@ class Event {
   final String? description;
   final DateTime? eventDate;
   final String? location;
+  final String? eventImage;
   final String qrCodeData;
   final String status; // draft, active, expired
   final Map<String, dynamic>? settings;
@@ -25,6 +26,7 @@ class Event {
     this.description,
     this.eventDate,
     this.location,
+    this.eventImage,
     required this.qrCodeData,
     required this.status,
     this.settings,
@@ -45,6 +47,7 @@ class Event {
           ? DateTime.parse(json['event_date'])
           : null,
       location: json['location'],
+      eventImage: json['event_image'],
       qrCodeData: json['qr_code_data'] ?? '',
       status: json['status'] ?? 'draft',
       settings: json['settings'],
@@ -68,6 +71,7 @@ class Event {
       'description': description,
       'event_date': eventDate?.toIso8601String(),
       'location': location,
+      'event_image': eventImage,
       'qr_code_data': qrCodeData,
       'status': status,
       'settings': settings,

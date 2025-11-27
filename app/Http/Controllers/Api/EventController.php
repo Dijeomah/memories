@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Event;
 use App\Models\QrScan;
 use App\Services\QRCodeService;
+use App\Services\Storage\CloudinaryStorageService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\DB;
@@ -14,10 +15,12 @@ use ZipArchive;
 class EventController extends Controller
 {
     protected $qrCodeService;
+    protected $storageService;
 
-    public function __construct(QRCodeService $qrCodeService)
+    public function __construct(QRCodeService $qrCodeService, CloudinaryStorageService $storageService)
     {
         $this->qrCodeService = $qrCodeService;
+        $this->storageService = $storageService;
     }
 
     /**
@@ -48,9 +51,19 @@ class EventController extends Controller
             'description' => 'nullable|string',
             'event_date' => 'nullable|date',
             'location' => 'nullable|string|max:255',
+            'event_image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:5120', // max 5MB
             'status' => 'nullable|in:draft,active,expired',
             'settings' => 'nullable|array',
         ]);
+
+        $eventImageUrl = null;
+        if ($request->hasFile('event_image')) {
+            $uploadResult = $this->storageService->upload(
+                $request->file('event_image'),
+                'events/images'
+            );
+            $eventImageUrl = $uploadResult['url'];
+        }
 
         $event = Event::create([
             'creator_id' => $request->user()->id,
@@ -58,6 +71,7 @@ class EventController extends Controller
             'description' => $validated['description'] ?? null,
             'event_date' => $validated['event_date'] ?? null,
             'location' => $validated['location'] ?? null,
+            'event_image' => $eventImageUrl,
             'qr_code_data' => $this->qrCodeService->generateUniqueCode(),
             'status' => $validated['status'] ?? 'active',
             'settings' => $validated['settings'] ?? null,
@@ -100,9 +114,18 @@ class EventController extends Controller
             'description' => 'nullable|string',
             'event_date' => 'nullable|date',
             'location' => 'nullable|string|max:255',
+            'event_image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:5120', // max 5MB
             'status' => 'nullable|in:draft,active,expired',
             'settings' => 'nullable|array',
         ]);
+
+        if ($request->hasFile('event_image')) {
+            $uploadResult = $this->storageService->upload(
+                $request->file('event_image'),
+                'events/images'
+            );
+            $validated['event_image'] = $uploadResult['url'];
+        }
 
         $event->update($validated);
 

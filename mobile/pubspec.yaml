@@ -44,6 +44,7 @@ dependencies:
   flutter_svg: ^2.0.9
   shimmer: ^3.0.0
   pull_to_refresh: ^2.0.0
+  hugeicons: ^0.0.7
 
   # Utilities
   intl: ^0.17.0
@@ -51,6 +52,7 @@ dependencies:
   path_provider: ^2.1.2
   permission_handler: ^11.2.0
   connectivity_plus: ^5.0.2
+  share_plus: ^7.2.2
 
   # Analytics & Monitoring
   flutter_dotenv: ^5.1.0

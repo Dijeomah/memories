@@ -15,6 +15,7 @@ class Event extends Model
         'description',
         'event_date',
         'location',
+        'event_image',
         'qr_code_data',
         'status',
         'settings',
