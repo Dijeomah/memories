@@ -4,6 +4,7 @@ import 'package:qr_flutter/qr_flutter.dart';
 import '../../config/app_theme.dart';
 import '../../providers/event_provider.dart';
 import '../../models/event.dart';
+import '../media/media_viewer_screen.dart';
 
 class EventDetailScreen extends StatefulWidget {
   final int eventId;
@@ -284,52 +285,85 @@ class _EventDetailScreenState extends State<EventDetailScreen>
       );
     }
 
-    return GridView.builder(
-      padding: const EdgeInsets.all(16),
-      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-        crossAxisCount: 3,
-        crossAxisSpacing: 8,
-        mainAxisSpacing: 8,
-      ),
-      itemCount: media.length,
-      itemBuilder: (context, index) {
-        final item = media[index];
-        return Card(
-          clipBehavior: Clip.antiAlias,
-          child: Stack(
-            fit: StackFit.expand,
-            children: [
-              Image.network(
-                item.thumbnailPath ?? item.filePath,
-                fit: BoxFit.cover,
-                errorBuilder: (context, error, stackTrace) {
-                  return Container(
-                    color: AppTheme.dividerColor,
-                    child: const Icon(Icons.broken_image),
-                  );
-                },
-              ),
-              if (item.isVideo)
-                Positioned(
-                  top: 4,
-                  right: 4,
-                  child: Container(
-                    padding: const EdgeInsets.all(4),
-                    decoration: BoxDecoration(
-                      color: Colors.black54,
-                      borderRadius: BorderRadius.circular(4),
-                    ),
-                    child: const Icon(
-                      Icons.play_arrow,
-                      color: Colors.white,
-                      size: 16,
-                    ),
+    return RefreshIndicator(
+      onRefresh: () async {
+        await context.read<EventProvider>().fetchEventMedia(provider.currentEvent!.id);
+      },
+      child: GridView.builder(
+        padding: EdgeInsets.zero,
+        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+          crossAxisCount: 3,
+          crossAxisSpacing: 0,
+          mainAxisSpacing: 0,
+          childAspectRatio: 1,
+        ),
+        itemCount: media.length,
+        itemBuilder: (context, index) {
+          final item = media[index];
+          return GestureDetector(
+            onTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => MediaViewerScreen(
+                    mediaList: media,
+                    initialIndex: index,
                   ),
                 ),
-            ],
-          ),
-        );
-      },
+              );
+            },
+            child: Hero(
+              tag: item.id,
+              child: Container(
+                decoration: const BoxDecoration(
+                  border: Border(
+                    right: BorderSide(color: Colors.black, width: 0.5),
+                    bottom: BorderSide(color: Colors.black, width: 0.5),
+                  ),
+                ),
+                child: Stack(
+                  fit: StackFit.expand,
+                  children: [
+                    Image.network(
+                      item.thumbnailPath ?? item.filePath,
+                      fit: BoxFit.cover,
+                      loadingBuilder: (context, child, loadingProgress) {
+                        if (loadingProgress == null) return child;
+                        return Center(
+                          child: CircularProgressIndicator(
+                            value: loadingProgress.expectedTotalBytes != null
+                                ? loadingProgress.cumulativeBytesLoaded /
+                                    loadingProgress.expectedTotalBytes!
+                                : null,
+                            strokeWidth: 2,
+                          ),
+                        );
+                      },
+                      errorBuilder: (context, error, stackTrace) {
+                        return Container(
+                          color: AppTheme.dividerColor,
+                          child: const Icon(Icons.broken_image, size: 32),
+                        );
+                      },
+                    ),
+                    if (item.isVideo)
+                      Container(
+                        color: Colors.black26,
+                        child: const Center(
+                          child: Icon(
+                            Icons.play_circle_filled,
+                            color: Colors.white,
+                            size: 40,
+                          ),
+                        ),
+                      ),
+                  ],
+                ),
+              ),
+            ),
+          );
+        },
+      ),
     );
   }
 
