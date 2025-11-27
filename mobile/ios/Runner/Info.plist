@@ -30,6 +30,8 @@
 	<string>14.0</string>
 	<key>NSCameraUsageDescription</key>
 	<string>Camera access is required for QR code scanning and photo capture</string>
+	<key>NSMicrophoneUsageDescription</key>
+	<string>Microphone access is required for video recording</string>
 	<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
 	<string>Location access is required for geofencing and event check-in</string>
 	<key>NSLocationWhenInUseUsageDescription</key>
