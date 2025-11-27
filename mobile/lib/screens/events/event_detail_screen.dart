@@ -528,7 +528,7 @@ class _EventDetailScreenState extends State<EventDetailScreen>
     );
   }
 
-  Widget _buildInfoRow(HugeIconData icon, String label, String value) {
+  Widget _buildInfoRow(IconData icon, String label, String value) {
     return Row(
       children: [
         HugeIcon(icon: icon, size: 20, color: AppTheme.textSecondary),
@@ -548,7 +548,7 @@ class _EventDetailScreenState extends State<EventDetailScreen>
     );
   }
 
-  Widget _buildStatCard(String label, String value, HugeIconData icon, Color color) {
+  Widget _buildStatCard(String label, String value, IconData icon, Color color) {
     return Expanded(
       child: Column(
         children: [
