@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:qr_flutter/qr_flutter.dart';
+import 'package:share_plus/share_plus.dart';
+import 'package:hugeicons/hugeicons.dart';
 import '../../config/app_theme.dart';
 import '../../providers/event_provider.dart';
 import '../../models/event.dart';
@@ -49,48 +51,22 @@ class _EventDetailScreenState extends State<EventDetailScreen>
         title: const Text('Event Details'),
         actions: [
           IconButton(
-            icon: const Icon(Icons.edit),
-            onPressed: () {
-              // TODO: Navigate to edit event screen
-            },
-          ),
-          PopupMenuButton(
-            itemBuilder: (context) => [
-              const PopupMenuItem(
-                value: 'share',
-                child: Row(
-                  children: [
-                    Icon(Icons.share),
-                    SizedBox(width: 8),
-                    Text('Share QR Code'),
-                  ],
-                ),
-              ),
-              const PopupMenuItem(
-                value: 'delete',
-                child: Row(
-                  children: [
-                    Icon(Icons.delete, color: AppTheme.errorColor),
-                    SizedBox(width: 8),
-                    Text('Delete Event', style: TextStyle(color: AppTheme.errorColor)),
-                  ],
-                ),
-              ),
-            ],
-            onSelected: (value) {
-              if (value == 'delete') {
-                _confirmDelete();
-              }
-            },
+            icon: const HugeIcon(
+              icon: HugeIcons.strokeRoundedMoreVertical,
+              color: Colors.black,
+            ),
+            onPressed: _showOptionsMenu,
           ),
         ],
         bottom: TabBar(
           controller: _tabController,
+          isScrollable: true,
+          tabAlignment: TabAlignment.start,
           tabs: const [
-            Tab(icon: Icon(Icons.info), text: 'Info'),
-            Tab(icon: Icon(Icons.photo_library), text: 'Media'),
-            Tab(icon: Icon(Icons.people), text: 'Guests'),
-            Tab(icon: Icon(Icons.analytics), text: 'Analytics'),
+            Tab(icon: HugeIcon(icon: HugeIcons.strokeRoundedInformationCircle, color: Colors.black, size: 20), text: 'Info'),
+            Tab(icon: HugeIcon(icon: HugeIcons.strokeRoundedImage02, color: Colors.black, size: 20), text: 'Media'),
+            Tab(icon: HugeIcon(icon: HugeIcons.strokeRoundedUserMultiple, color: Colors.black, size: 20), text: 'Guests'),
+            Tab(icon: HugeIcon(icon: HugeIcons.strokeRoundedAnalytics02, color: Colors.black, size: 20), text: 'Stats'),
           ],
         ),
       ),
@@ -134,17 +110,27 @@ class _EventDetailScreenState extends State<EventDetailScreen>
                 children: [
                   Row(
                     children: [
+                      // Event image or icon placeholder
                       Container(
-                        padding: const EdgeInsets.all(16),
+                        width: 64,
+                        height: 64,
                         decoration: BoxDecoration(
-                          gradient: AppTheme.primaryGradient,
+                          gradient: event.eventImage == null ? AppTheme.primaryGradient : null,
                           borderRadius: BorderRadius.circular(12),
+                          image: event.eventImage != null
+                              ? DecorationImage(
+                                  image: NetworkImage(event.eventImage!),
+                                  fit: BoxFit.cover,
+                                )
+                              : null,
                         ),
-                        child: const Icon(
-                          Icons.event,
-                          color: Colors.white,
-                          size: 32,
-                        ),
+                        child: event.eventImage == null
+                            ? const HugeIcon(
+                                icon: HugeIcons.strokeRoundedCalendar03,
+                                color: Colors.white,
+                                size: 32,
+                              )
+                            : null,
                       ),
                       const SizedBox(width: 16),
                       Expanded(
@@ -166,15 +152,15 @@ class _EventDetailScreenState extends State<EventDetailScreen>
                     Text(event.description!, style: AppTheme.bodyMedium),
                   ],
                   const Divider(height: 32),
-                  _buildInfoRow(Icons.calendar_today, 'Event Date',
+                  _buildInfoRow(HugeIcons.strokeRoundedCalendar03, 'Event Date',
                       event.eventDate != null ? _formatDate(event.eventDate!) : 'Not set'),
                   const SizedBox(height: 12),
-                  _buildInfoRow(Icons.location_on, 'Location', event.location ?? 'Not set'),
+                  _buildInfoRow(HugeIcons.strokeRoundedLocation01, 'Location', event.location ?? 'Not set'),
                   const SizedBox(height: 12),
-                  _buildInfoRow(Icons.photo_library, 'Media',
+                  _buildInfoRow(HugeIcons.strokeRoundedImage02, 'Media',
                       '${event.mediaCount ?? 0} items'),
                   const SizedBox(height: 12),
-                  _buildInfoRow(Icons.people, 'Guests',
+                  _buildInfoRow(HugeIcons.strokeRoundedUserMultiple, 'Guests',
                       '${event.guestsCount ?? 0} people'),
                 ],
               ),
@@ -186,19 +172,22 @@ class _EventDetailScreenState extends State<EventDetailScreen>
             child: Padding(
               padding: const EdgeInsets.all(20),
               child: Column(
+                crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
                   Text('Event QR Code', style: AppTheme.heading3),
                   const SizedBox(height: 16),
-                  Container(
-                    padding: const EdgeInsets.all(16),
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: QrImageView(
-                      data: event.qrCodeData,
-                      version: QrVersions.auto,
-                      size: 200,
+                  Center(
+                    child: Container(
+                      padding: const EdgeInsets.all(16),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: QrImageView(
+                        data: event.qrCodeData,
+                        version: QrVersions.auto,
+                        size: 200,
+                      ),
                     ),
                   ),
                   const SizedBox(height: 16),
@@ -209,10 +198,12 @@ class _EventDetailScreenState extends State<EventDetailScreen>
                   ),
                   const SizedBox(height: 12),
                   ElevatedButton.icon(
-                    onPressed: () {
-                      // TODO: Share QR code
-                    },
-                    icon: const Icon(Icons.share),
+                    onPressed: () => _shareQRCode(event),
+                    icon: const HugeIcon(
+                      icon: HugeIcons.strokeRoundedShare08,
+                      color: Colors.white,
+                      size: 18,
+                    ),
                     label: const Text('Share QR Code'),
                   ),
                 ],
@@ -433,18 +424,18 @@ class _EventDetailScreenState extends State<EventDetailScreen>
                   Text('QR Code Scans', style: AppTheme.heading3),
                   const SizedBox(height: 16),
                   Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceAround,
                     children: [
                       _buildStatCard(
                         'Total Scans',
                         '${scans.length}',
-                        Icons.qr_code_scanner,
+                        HugeIcons.strokeRoundedQrCode,
                         AppTheme.primaryColor,
                       ),
+                      const SizedBox(width: 12),
                       _buildStatCard(
                         'Unique Users',
                         '${_getUniqueUsers(scans)}',
-                        Icons.people,
+                        HugeIcons.strokeRoundedUserMultiple,
                         AppTheme.successColor,
                       ),
                     ],
@@ -472,12 +463,17 @@ class _EventDetailScreenState extends State<EventDetailScreen>
                         final scan = scans[index];
                         return ListTile(
                           contentPadding: EdgeInsets.zero,
-                          leading: const Icon(Icons.qr_code_scanner,
-                              color: AppTheme.primaryColor),
+                          leading: const HugeIcon(
+                            icon: HugeIcons.strokeRoundedQrCode,
+                            color: AppTheme.primaryColor,
+                          ),
                           title: Text(scan.guest?.name ?? 'Unknown User'),
                           subtitle: Text(_formatDateTime(scan.scannedAt)),
                           trailing: scan.latitude != null && scan.longitude != null
-                              ? const Icon(Icons.location_on, size: 16)
+                              ? const HugeIcon(
+                                  icon: HugeIcons.strokeRoundedLocation01,
+                                  size: 16,
+                                )
                               : null,
                         );
                       },
@@ -531,38 +527,53 @@ class _EventDetailScreenState extends State<EventDetailScreen>
     );
   }
 
-  Widget _buildInfoRow(IconData icon, String label, String value) {
+  Widget _buildInfoRow(HugeIconData icon, String label, String value) {
     return Row(
       children: [
-        Icon(icon, size: 20, color: AppTheme.textSecondary),
+        HugeIcon(icon: icon, size: 20, color: AppTheme.textSecondary),
         const SizedBox(width: 12),
         Expanded(
           child: Text(label, style: AppTheme.bodyMedium),
         ),
-        Text(
-          value,
-          style: AppTheme.bodyMedium.copyWith(fontWeight: FontWeight.w600),
+        Flexible(
+          child: Text(
+            value,
+            style: AppTheme.bodyMedium.copyWith(fontWeight: FontWeight.w600),
+            textAlign: TextAlign.end,
+            overflow: TextOverflow.ellipsis,
+          ),
         ),
       ],
     );
   }
 
-  Widget _buildStatCard(String label, String value, IconData icon, Color color) {
-    return Column(
-      children: [
-        Container(
-          padding: const EdgeInsets.all(16),
-          decoration: BoxDecoration(
-            color: color.withOpacity(0.1),
-            borderRadius: BorderRadius.circular(12),
+  Widget _buildStatCard(String label, String value, HugeIconData icon, Color color) {
+    return Expanded(
+      child: Column(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: color.withOpacity(0.1),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: HugeIcon(icon: icon, color: color, size: 32),
           ),
-          child: Icon(icon, color: color, size: 32),
-        ),
-        const SizedBox(height: 8),
-        Text(value, style: AppTheme.heading2.copyWith(color: color)),
-        const SizedBox(height: 4),
-        Text(label, style: AppTheme.bodySmall),
-      ],
+          const SizedBox(height: 8),
+          FittedBox(
+            fit: BoxFit.scaleDown,
+            child: Text(value, style: AppTheme.heading2.copyWith(color: color)),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            label,
+            style: AppTheme.bodySmall,
+            textAlign: TextAlign.center,
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
+          ),
+        ],
+      ),
     );
   }
 
@@ -592,6 +603,63 @@ class _EventDetailScreenState extends State<EventDetailScreen>
     } else {
       return '${date.day}/${date.month}/${date.year}';
     }
+  }
+
+  void _showOptionsMenu() {
+    final event = context.read<EventProvider>().currentEvent;
+    if (event == null) return;
+
+    showModalBottomSheet(
+      context: context,
+      builder: (context) => SafeArea(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            ListTile(
+              leading: const HugeIcon(
+                icon: HugeIcons.strokeRoundedEdit02,
+                color: AppTheme.primaryColor,
+              ),
+              title: const Text('Edit Event'),
+              onTap: () {
+                Navigator.pop(context);
+                // TODO: Navigate to edit event screen
+              },
+            ),
+            ListTile(
+              leading: const HugeIcon(
+                icon: HugeIcons.strokeRoundedShare08,
+                color: AppTheme.primaryColor,
+              ),
+              title: const Text('Share QR Code'),
+              onTap: () {
+                Navigator.pop(context);
+                _shareQRCode(event);
+              },
+            ),
+            ListTile(
+              leading: const HugeIcon(
+                icon: HugeIcons.strokeRoundedDelete02,
+                color: AppTheme.errorColor,
+              ),
+              title: const Text('Delete Event', style: TextStyle(color: AppTheme.errorColor)),
+              onTap: () {
+                Navigator.pop(context);
+                _confirmDelete();
+              },
+            ),
+            const SizedBox(height: 8),
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _shareQRCode(Event event) {
+    Share.share(
+      'Join my event "${event.title}"!\nScan this QR code: ${event.qrCodeData}',
+      subject: 'Event QR Code - ${event.title}',
+    );
   }
 
   void _confirmDelete() {
