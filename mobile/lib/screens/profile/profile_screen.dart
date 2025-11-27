@@ -84,7 +84,7 @@ class ProfileScreen extends StatelessWidget {
     if (context.mounted) {
       Navigator.pushNamedAndRemoveUntil(
         context,
-        AppRoutes.login,
+        AppRoutes.guestWelcome,
         (route) => false,
       );
     }

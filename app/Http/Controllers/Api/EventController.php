@@ -158,13 +158,22 @@ class EventController extends Controller
      */
     public function getMedia(Request $request, $id)
     {
-        $event = Event::where('creator_id', $request->user()->id)
-            ->findOrFail($id);
+        $event = Event::findOrFail($id);
+
+        // Check if user is creator or has joined the event as a guest
+        $isCreator = $event->creator_id === $request->user()->id;
+        $isGuest = $event->guests()->where('user_id', $request->user()->id)->exists();
+
+        if (!$isCreator && !$isGuest) {
+            return response()->json([
+                'message' => 'You do not have access to this event',
+            ], 403);
+        }
 
         $media = $event->media()
-            ->with('uploader')
-            ->latest()
-            ->paginate(20);
+            ->with('uploader:id,name,email', 'event:id,title')
+            ->latest('created_at')
+            ->paginate(50);
 
         return response()->json($media);
     }

@@ -5,6 +5,7 @@ import 'dart:io';
 import '../../config/app_theme.dart';
 import '../../providers/event_provider.dart';
 import '../../models/event.dart';
+import '../media/media_viewer_screen.dart';
 
 class GuestEventScreen extends StatefulWidget {
   final Event event;
@@ -56,15 +57,15 @@ class _GuestEventScreenState extends State<GuestEventScreen> {
           final media = provider.eventMedia;
 
           if (media.isEmpty) {
-            return const Center(
+            return Center(
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   Icon(Icons.photo_library, size: 100, color: AppTheme.textSecondary),
-                  SizedBox(height: 16),
-                  Text('No photos yet', style: AppTheme.heading3),
-                  SizedBox(height: 8),
-                  Text(
+                  const SizedBox(height: 16),
+                  const Text('No photos yet', style: AppTheme.heading3),
+                  const SizedBox(height: 8),
+                  const Text(
                     'Be the first to upload!',
                     style: AppTheme.bodyMedium,
                   ),
@@ -73,52 +74,81 @@ class _GuestEventScreenState extends State<GuestEventScreen> {
             );
           }
 
+          // Gallery with no spacing
           return RefreshIndicator(
             onRefresh: () async {
               await context.read<EventProvider>().fetchEventMedia(widget.event.id);
             },
             child: GridView.builder(
-              padding: const EdgeInsets.all(16),
+              padding: EdgeInsets.zero,
               gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
                 crossAxisCount: 3,
-                crossAxisSpacing: 8,
-                mainAxisSpacing: 8,
+                crossAxisSpacing: 0,
+                mainAxisSpacing: 0,
                 childAspectRatio: 1,
               ),
               itemCount: media.length,
               itemBuilder: (context, index) {
                 final item = media[index];
-                return Card(
-                  clipBehavior: Clip.antiAlias,
-                  child: InkWell(
-                    onTap: () {
-                      // TODO: Show full screen image viewer
-                    },
-                    child: Stack(
-                      fit: StackFit.expand,
-                      children: [
-                        Image.network(
-                          item.thumbnailPath ?? item.filePath,
-                          fit: BoxFit.cover,
-                          errorBuilder: (context, error, stackTrace) {
-                            return Container(
-                              color: AppTheme.dividerColor,
-                              child: const Icon(Icons.broken_image),
-                            );
-                          },
+                return GestureDetector(
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => MediaViewerScreen(
+                          mediaList: media,
+                          initialIndex: index,
                         ),
-                        if (item.isVideo)
-                          Container(
-                            color: Colors.black26,
-                            child: const Center(
-                              child: Icon(
-                                Icons.play_circle_filled,
-                                color: Colors.white,
-                                size: 40,
+                      ),
+                    );
+                  },
+                  child: Hero(
+                    tag: item.id,
+                    child: Container(
+                      decoration: const BoxDecoration(
+                        border: Border(
+                          right: BorderSide(color: Colors.black, width: 0.5),
+                          bottom: BorderSide(color: Colors.black, width: 0.5),
+                        ),
+                      ),
+                      child: Stack(
+                        fit: StackFit.expand,
+                        children: [
+                          Image.network(
+                            item.thumbnailPath ?? item.filePath,
+                            fit: BoxFit.cover,
+                            loadingBuilder: (context, child, loadingProgress) {
+                              if (loadingProgress == null) return child;
+                              return Center(
+                                child: CircularProgressIndicator(
+                                  value: loadingProgress.expectedTotalBytes != null
+                                      ? loadingProgress.cumulativeBytesLoaded /
+                                          loadingProgress.expectedTotalBytes!
+                                      : null,
+                                  strokeWidth: 2,
+                                ),
+                              );
+                            },
+                            errorBuilder: (context, error, stackTrace) {
+                              return Container(
+                                color: AppTheme.dividerColor,
+                                child: const Icon(Icons.broken_image, size: 32),
+                              );
+                            },
+                          ),
+                          if (item.isVideo)
+                            Container(
+                              color: Colors.black26,
+                              child: const Center(
+                                child: Icon(
+                                  Icons.play_circle_filled,
+                                  color: Colors.white,
+                                  size: 40,
+                                ),
                               ),
                             ),
-                          ),
-                      ],
+                        ],
+                      ),
                     ),
                   ),
                 );
@@ -127,63 +157,61 @@ class _GuestEventScreenState extends State<GuestEventScreen> {
           );
         },
       ),
-      floatingActionButton: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          // Camera Button
-          FloatingActionButton(
-            heroTag: 'camera',
-            onPressed: () => _pickMedia(ImageSource.camera),
-            backgroundColor: AppTheme.primaryColor,
-            child: const Icon(Icons.camera_alt),
-          ),
-          const SizedBox(height: 12),
-          // Gallery Button
-          FloatingActionButton(
-            heroTag: 'gallery',
-            onPressed: () => _pickMedia(ImageSource.gallery),
-            backgroundColor: AppTheme.secondaryColor,
-            child: const Icon(Icons.photo_library),
-          ),
-        ],
+      floatingActionButton: FloatingActionButton(
+        onPressed: () => _showCameraOptions(),
+        backgroundColor: AppTheme.primaryColor,
+        child: const Icon(Icons.camera_alt),
       ),
     );
   }
 
-  void _pickMedia(ImageSource source) async {
-    try {
-      // Show option to choose photo or video
-      final mediaType = await showDialog<String>(
-        context: context,
-        builder: (context) => AlertDialog(
-          title: const Text('Choose media type'),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              ListTile(
-                leading: const Icon(Icons.photo, color: AppTheme.primaryColor),
-                title: const Text('Photo'),
-                onTap: () => Navigator.pop(context, 'photo'),
-              ),
-              ListTile(
-                leading: const Icon(Icons.videocam, color: AppTheme.secondaryColor),
-                title: const Text('Video'),
-                onTap: () => Navigator.pop(context, 'video'),
-              ),
-            ],
-          ),
+  void _showCameraOptions() {
+    showModalBottomSheet(
+      context: context,
+      builder: (context) => SafeArea(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            ListTile(
+              leading: const Icon(Icons.camera_alt, color: AppTheme.primaryColor),
+              title: const Text('Take Photo'),
+              onTap: () {
+                Navigator.pop(context);
+                _pickMedia(ImageSource.camera, 'photo');
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.videocam, color: AppTheme.secondaryColor),
+              title: const Text('Record Video'),
+              onTap: () {
+                Navigator.pop(context);
+                _pickMedia(ImageSource.camera, 'video');
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.photo_library, color: AppTheme.primaryColor),
+              title: const Text('Choose from Gallery'),
+              onTap: () {
+                Navigator.pop(context);
+                _pickMedia(ImageSource.gallery, 'photo');
+              },
+            ),
+            const SizedBox(height: 8),
+          ],
         ),
-      );
+      ),
+    );
+  }
 
-      if (mediaType == null) return;
-
+  void _pickMedia(ImageSource source, String mediaType) async {
+    try {
       XFile? file;
       if (mediaType == 'photo') {
         file = await _picker.pickImage(
           source: source,
           maxWidth: 1920,
           maxHeight: 1080,
-          imageQuality: 85,
+          imageQuality: 70, // Standard quality for free/guest users
         );
       } else {
         file = await _picker.pickVideo(
@@ -229,6 +257,10 @@ class _GuestEventScreenState extends State<GuestEventScreen> {
 
       if (mounted) {
         Navigator.pop(context); // Close loading dialog
+
+        // Auto-refresh to show uploaded media
+        await context.read<EventProvider>().fetchEventMedia(widget.event.id);
+
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
             content: Text('Media uploaded successfully!'),
