@@ -85,6 +85,18 @@ return [
             'report' => false,
         ],
 
+        'cloudinary' => [
+            'driver' => 'cloudinary',
+            'cloud' => env('CLOUDINARY_CLOUD_NAME'),
+            'key' => env('CLOUDINARY_API_KEY'),
+            'secret' => env('CLOUDINARY_API_SECRET'),
+            'upload_preset' => env('CLOUDINARY_UPLOAD_PRESET'),
+            'folder' => env('CLOUDINARY_FOLDER'),
+            'throw' => false,
+            'report' => false,
+            'secure' => true,
+        ],
+
     ],
 
     /*
