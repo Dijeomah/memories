@@ -162,7 +162,7 @@ class EventController extends Controller
 
         // Check if user is creator or has joined the event as a guest
         $isCreator = $event->creator_id === $request->user()->id;
-        $isGuest = $event->guests()->where('user_id', $request->user()->id)->exists();
+        $isGuest = $event->guests()->where('guest_id', $request->user()->id)->exists();
 
         if (!$isCreator && !$isGuest) {
             return response()->json([
@@ -171,7 +171,7 @@ class EventController extends Controller
         }
 
         $media = $event->media()
-            ->with('uploader:id,name,email', 'event:id,title')
+            ->with('uploader:id,name,email,role,created_at,updated_at', 'event:id,title')
             ->latest('created_at')
             ->paginate(50);
 
