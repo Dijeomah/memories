@@ -18,6 +18,7 @@ class SubscriptionService {
   Future<UserSubscription?> getCurrentSubscription() async {
     try {
       final response = await _api.get(ApiConfig.subscription);
+      print(response);
       if (response['subscription'] != null) {
         return UserSubscription.fromJson(response['subscription']);
       }

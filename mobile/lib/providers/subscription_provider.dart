@@ -53,6 +53,7 @@ class SubscriptionProvider with ChangeNotifier {
 
     try {
       _currentSubscription = await _subscriptionService.getCurrentSubscription();
+      print(_currentSubscription);
       _error = null;
     } catch (e) {
       _error = e.toString();

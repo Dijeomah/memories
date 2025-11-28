@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:hugeicons/hugeicons.dart';
 import 'package:provider/provider.dart';
 import '../../../config/app_routes.dart';
 import '../../../config/app_theme.dart';
@@ -57,8 +58,8 @@ class _SubscriptionTabState extends State<SubscriptionTab> {
                               gradient: AppTheme.primaryGradient,
                               borderRadius: BorderRadius.circular(12),
                             ),
-                            child: const Icon(
-                              Icons.workspace_premium,
+                            child: const HugeIcon(
+                              icon: HugeIcons.strokeRoundedCrown,
                               color: Colors.white,
                               size: 32,
                             ),

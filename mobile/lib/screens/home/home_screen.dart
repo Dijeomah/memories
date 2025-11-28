@@ -62,7 +62,7 @@ class _HomeScreenState extends State<HomeScreen> {
               onPressed: () => Navigator.pushNamed(context, AppRoutes.createEvent),
               icon: const HugeIcon(
                 icon: HugeIcons.strokeRoundedAdd01,
-                color: Colors.white,
+                color: Colors.black,
               ),
               label: const Text('Create Event'),
             )
