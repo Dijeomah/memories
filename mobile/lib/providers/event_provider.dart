@@ -232,7 +232,8 @@ class EventProvider with ChangeNotifier {
       final List<Media> allMedia = [];
       for (final event in _events) {
         try {
-          final media = await _mediaService.getMyMedia(event.id);
+          // Use getEventMedia instead of getMyMedia to get ALL media (creator + guests)
+          final media = await _eventService.getEventMedia(event.id);
           allMedia.addAll(media);
         } catch (e) {
           // Skip events with errors
