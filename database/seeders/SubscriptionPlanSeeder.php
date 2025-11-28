@@ -35,6 +35,7 @@ class SubscriptionPlanSeeder extends Seeder
                 ],
                 'is_active' => true,
                 'is_featured' => false,
+                'trial_days' => 0,
             ],
             [
                 'name' => 'Pro',
@@ -60,6 +61,7 @@ class SubscriptionPlanSeeder extends Seeder
                 ],
                 'is_active' => true,
                 'is_featured' => true,
+                'trial_days' => 7,
             ],
             [
                 'name' => 'Enterprise',
@@ -88,6 +90,7 @@ class SubscriptionPlanSeeder extends Seeder
                 ],
                 'is_active' => true,
                 'is_featured' => false,
+                'trial_days' => 14,
             ],
         ];
 

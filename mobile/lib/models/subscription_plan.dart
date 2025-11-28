@@ -13,6 +13,7 @@ class SubscriptionPlan {
   final List<String> features;
   final bool isActive;
   final bool isFeatured;
+  final int trialDays;
   final String? paystackPlanCode;
   final DateTime createdAt;
   final DateTime updatedAt;
@@ -32,6 +33,7 @@ class SubscriptionPlan {
     required this.features,
     required this.isActive,
     required this.isFeatured,
+    required this.trialDays,
     this.paystackPlanCode,
     required this.createdAt,
     required this.updatedAt,
@@ -55,6 +57,7 @@ class SubscriptionPlan {
           : [],
       isActive: json['is_active'] ?? true,
       isFeatured: json['is_featured'] ?? false,
+      trialDays: json['trial_days'] ?? 0,
       paystackPlanCode: json['paystack_plan_code'],
       createdAt: DateTime.parse(json['created_at']),
       updatedAt: DateTime.parse(json['updated_at']),
@@ -77,6 +80,7 @@ class SubscriptionPlan {
       'features': features,
       'is_active': isActive,
       'is_featured': isFeatured,
+      'trial_days': trialDays,
       'paystack_plan_code': paystackPlanCode,
       'created_at': createdAt.toIso8601String(),
       'updated_at': updatedAt.toIso8601String(),
