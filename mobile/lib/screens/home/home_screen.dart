@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:hugeicons/hugeicons.dart';
 import '../../config/app_routes.dart';
 import '../../config/app_theme.dart';
 import 'tabs/media_feed_tab.dart';
@@ -36,12 +37,18 @@ class _HomeScreenState extends State<HomeScreen> {
         actions: [
           if (_currentIndex < 2) ...[
             IconButton(
-              icon: const Icon(Icons.qr_code_scanner),
+              icon: const HugeIcon(
+                icon: HugeIcons.strokeRoundedQrCode,
+                color: Colors.black,
+              ),
               onPressed: () => Navigator.pushNamed(context, AppRoutes.scanQR),
             ),
           ],
           IconButton(
-            icon: const Icon(Icons.person),
+            icon: const HugeIcon(
+              icon: HugeIcons.strokeRoundedUser,
+              color: Colors.black,
+            ),
             onPressed: () => Navigator.pushNamed(context, AppRoutes.profile),
           ),
         ],
@@ -53,7 +60,10 @@ class _HomeScreenState extends State<HomeScreen> {
       floatingActionButton: _currentIndex == 1
           ? FloatingActionButton.extended(
               onPressed: () => Navigator.pushNamed(context, AppRoutes.createEvent),
-              icon: const Icon(Icons.add),
+              icon: const HugeIcon(
+                icon: HugeIcons.strokeRoundedAdd01,
+                color: Colors.white,
+              ),
               label: const Text('Create Event'),
             )
           : null,
@@ -62,15 +72,36 @@ class _HomeScreenState extends State<HomeScreen> {
         onTap: (index) => setState(() => _currentIndex = index),
         items: const [
           BottomNavigationBarItem(
-            icon: Icon(Icons.photo_library),
+            icon: HugeIcon(
+              icon: HugeIcons.strokeRoundedImage02,
+              color: Colors.grey,
+            ),
+            activeIcon: HugeIcon(
+              icon: HugeIcons.strokeRoundedImage02,
+              color: AppTheme.primaryColor,
+            ),
             label: 'Home',
           ),
           BottomNavigationBarItem(
-            icon: Icon(Icons.event),
+            icon: HugeIcon(
+              icon: HugeIcons.strokeRoundedCalendar03,
+              color: Colors.grey,
+            ),
+            activeIcon: HugeIcon(
+              icon: HugeIcons.strokeRoundedCalendar03,
+              color: AppTheme.primaryColor,
+            ),
             label: 'Events',
           ),
           BottomNavigationBarItem(
-            icon: Icon(Icons.workspace_premium),
+            icon: HugeIcon(
+              icon: HugeIcons.strokeRoundedCrown,
+              color: Colors.grey,
+            ),
+            activeIcon: HugeIcon(
+              icon: HugeIcons.strokeRoundedCrown,
+              color: AppTheme.primaryColor,
+            ),
             label: 'Plan',
           ),
         ],

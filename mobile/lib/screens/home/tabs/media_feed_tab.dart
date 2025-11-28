@@ -1,8 +1,11 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:hugeicons/hugeicons.dart';
 import '../../../config/app_theme.dart';
 import '../../../providers/event_provider.dart';
 import '../../../models/media.dart';
+import '../../media/media_viewer_screen.dart';
 
 class MediaFeedTab extends StatefulWidget {
   const MediaFeedTab({super.key});
@@ -40,7 +43,11 @@ class _MediaFeedTabState extends State<MediaFeedTab> {
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Icon(Icons.photo_library, size: 100, color: AppTheme.textSecondary),
+                HugeIcon(
+                  icon: HugeIcons.strokeRoundedImage02,
+                  size: 100,
+                  color: AppTheme.textSecondary,
+                ),
                 const SizedBox(height: 16),
                 const Text('No memories yet', style: AppTheme.heading3),
                 const SizedBox(height: 8),
@@ -58,19 +65,32 @@ class _MediaFeedTabState extends State<MediaFeedTab> {
           onRefresh: () async {
             await context.read<EventProvider>().fetchRecentMedia();
           },
-          child: GridView.builder(
-            padding: const EdgeInsets.all(16),
-            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-              crossAxisCount: 2,
-              crossAxisSpacing: 12,
-              mainAxisSpacing: 12,
-              childAspectRatio: 0.75,
-            ),
-            itemCount: recentMedia.length,
-            itemBuilder: (context, index) {
-              final media = recentMedia[index];
-              return _MediaCard(media: media);
-            },
+          child: CustomScrollView(
+            slivers: [
+              // Slideshow Hero Section
+              SliverToBoxAdapter(
+                child: _MemoriesSlideshow(media: recentMedia),
+              ),
+              // Grid of all memories
+              SliverPadding(
+                padding: const EdgeInsets.all(16),
+                sliver: SliverGrid(
+                  gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                    crossAxisCount: 3,
+                    crossAxisSpacing: 8,
+                    mainAxisSpacing: 8,
+                    childAspectRatio: 1,
+                  ),
+                  delegate: SliverChildBuilderDelegate(
+                    (context, index) {
+                      final media = recentMedia[index];
+                      return _MediaGridItem(media: media, allMedia: recentMedia, initialIndex: index);
+                    },
+                    childCount: recentMedia.length,
+                  ),
+                ),
+              ),
+            ],
           ),
         );
       },
@@ -78,81 +98,215 @@ class _MediaFeedTabState extends State<MediaFeedTab> {
   }
 }
 
-class _MediaCard extends StatelessWidget {
-  final Media media;
+// Amazing slideshow widget with fade animations
+class _MemoriesSlideshow extends StatefulWidget {
+  final List<Media> media;
 
-  const _MediaCard({required this.media});
+  const _MemoriesSlideshow({required this.media});
+
+  @override
+  State<_MemoriesSlideshow> createState() => _MemoriesSlideshowState();
+}
+
+class _MemoriesSlideshowState extends State<_MemoriesSlideshow> {
+  int _currentIndex = 0;
+  Timer? _timer;
+  double _opacity = 1.0;
+
+  @override
+  void initState() {
+    super.initState();
+    _startSlideshow();
+  }
+
+  void _startSlideshow() {
+    _timer = Timer.periodic(const Duration(seconds: 4), (timer) {
+      setState(() {
+        _opacity = 0.0;
+      });
+
+      Future.delayed(const Duration(milliseconds: 500), () {
+        if (mounted) {
+          setState(() {
+            _currentIndex = (_currentIndex + 1) % widget.media.length;
+            _opacity = 1.0;
+          });
+        }
+      });
+    });
+  }
+
+  @override
+  void dispose() {
+    _timer?.cancel();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
-    return Card(
-      clipBehavior: Clip.antiAlias,
-      child: InkWell(
-        onTap: () {
-          // TODO: Show full screen media viewer
-        },
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Expanded(
-              child: Stack(
-                fit: StackFit.expand,
-                children: [
-                  // Thumbnail
-                  Image.network(
-                    media.thumbnailPath ?? media.filePath,
-                    fit: BoxFit.cover,
-                    errorBuilder: (context, error, stackTrace) {
-                      return Container(
-                        color: AppTheme.dividerColor,
-                        child: const Icon(Icons.broken_image, size: 50),
-                      );
-                    },
-                  ),
-                  // Video indicator
-                  if (media.isVideo)
-                    Positioned(
-                      top: 8,
-                      right: 8,
-                      child: Container(
-                        padding: const EdgeInsets.all(4),
-                        decoration: BoxDecoration(
-                          color: Colors.black54,
-                          borderRadius: BorderRadius.circular(4),
-                        ),
-                        child: const Icon(
-                          Icons.play_arrow,
-                          color: Colors.white,
-                          size: 20,
-                        ),
-                      ),
-                    ),
-                ],
-              ),
+    final currentMedia = widget.media[_currentIndex];
+
+    return GestureDetector(
+      onTap: () {
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => MediaViewerScreen(
+              mediaList: widget.media,
+              initialIndex: _currentIndex,
             ),
-            Padding(
-              padding: const EdgeInsets.all(8),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  if (media.event != null)
-                    Text(
-                      media.event!.title,
-                      style: AppTheme.bodySmall.copyWith(
-                        fontWeight: FontWeight.w600,
-                      ),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                  const SizedBox(height: 4),
-                  Text(
-                    _formatDate(media.createdAt),
-                    style: AppTheme.caption,
-                  ),
-                ],
-              ),
+          ),
+        );
+      },
+      child: Container(
+        height: 400,
+        margin: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(20),
+          boxShadow: [
+            BoxShadow(
+              color: AppTheme.primaryColor.withOpacity(0.3),
+              blurRadius: 20,
+              offset: const Offset(0, 10),
             ),
           ],
+        ),
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(20),
+          child: Stack(
+            fit: StackFit.expand,
+            children: [
+              // Image with fade animation
+              AnimatedOpacity(
+                opacity: _opacity,
+                duration: const Duration(milliseconds: 500),
+                curve: Curves.easeInOut,
+                child: Image.network(
+                  currentMedia.filePath,
+                  fit: BoxFit.cover,
+                  loadingBuilder: (context, child, loadingProgress) {
+                    if (loadingProgress == null) return child;
+                    return Container(
+                      color: AppTheme.dividerColor,
+                      child: Center(
+                        child: CircularProgressIndicator(
+                          value: loadingProgress.expectedTotalBytes != null
+                              ? loadingProgress.cumulativeBytesLoaded /
+                                  loadingProgress.expectedTotalBytes!
+                              : null,
+                        ),
+                      ),
+                    );
+                  },
+                  errorBuilder: (context, error, stackTrace) {
+                    return Container(
+                      color: AppTheme.dividerColor,
+                      child: const Center(
+                        child: HugeIcon(
+                          icon: HugeIcons.strokeRoundedImageNotFound02,
+                          size: 64,
+                          color: AppTheme.textSecondary,
+                        ),
+                      ),
+                    );
+                  },
+                ),
+              ),
+              // Gradient overlay
+              Positioned(
+                bottom: 0,
+                left: 0,
+                right: 0,
+                child: Container(
+                  padding: const EdgeInsets.all(20),
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      begin: Alignment.topCenter,
+                      end: Alignment.bottomCenter,
+                      colors: [
+                        Colors.transparent,
+                        Colors.black.withOpacity(0.8),
+                      ],
+                    ),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      if (currentMedia.event != null)
+                        Row(
+                          children: [
+                            const HugeIcon(
+                              icon: HugeIcons.strokeRoundedCalendar03,
+                              size: 16,
+                              color: Colors.white70,
+                            ),
+                            const SizedBox(width: 8),
+                            Expanded(
+                              child: Text(
+                                currentMedia.event!.title,
+                                style: const TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ),
+                          ],
+                        ),
+                      const SizedBox(height: 8),
+                      Row(
+                        children: [
+                          const HugeIcon(
+                            icon: HugeIcons.strokeRoundedClock01,
+                            size: 14,
+                            color: Colors.white70,
+                          ),
+                          const SizedBox(width: 6),
+                          Text(
+                            _formatDate(currentMedia.createdAt),
+                            style: const TextStyle(
+                              color: Colors.white70,
+                              fontSize: 14,
+                            ),
+                          ),
+                          const Spacer(),
+                          // Page indicators
+                          Row(
+                            children: List.generate(
+                              widget.media.length > 5 ? 5 : widget.media.length,
+                              (index) => Container(
+                                margin: const EdgeInsets.symmetric(horizontal: 2),
+                                width: _currentIndex % widget.media.length == index ? 24 : 8,
+                                height: 8,
+                                decoration: BoxDecoration(
+                                  color: _currentIndex % widget.media.length == index
+                                      ? Colors.white
+                                      : Colors.white30,
+                                  borderRadius: BorderRadius.circular(4),
+                                ),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              // Video indicator
+              if (currentMedia.isVideo)
+                const Center(
+                  child: HugeIcon(
+                    icon: HugeIcons.strokeRoundedPlayCircle,
+                    size: 64,
+                    color: Colors.white,
+                  ),
+                ),
+            ],
+          ),
         ),
       ),
     );
@@ -175,5 +329,94 @@ class _MediaCard extends StatelessWidget {
     } else {
       return '${date.day}/${date.month}/${date.year}';
     }
+  }
+}
+
+// Grid item widget
+class _MediaGridItem extends StatelessWidget {
+  final Media media;
+  final List<Media> allMedia;
+  final int initialIndex;
+
+  const _MediaGridItem({
+    required this.media,
+    required this.allMedia,
+    required this.initialIndex,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: () {
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => MediaViewerScreen(
+              mediaList: allMedia,
+              initialIndex: initialIndex,
+            ),
+          ),
+        );
+      },
+      child: Hero(
+        tag: 'media_${media.id}',
+        child: Container(
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(8),
+            border: Border.all(color: Colors.black12, width: 0.5),
+          ),
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(8),
+            child: Stack(
+              fit: StackFit.expand,
+              children: [
+                Image.network(
+                  media.thumbnailPath ?? media.filePath,
+                  fit: BoxFit.cover,
+                  loadingBuilder: (context, child, loadingProgress) {
+                    if (loadingProgress == null) return child;
+                    return Container(
+                      color: AppTheme.dividerColor,
+                      child: Center(
+                        child: CircularProgressIndicator(
+                          value: loadingProgress.expectedTotalBytes != null
+                              ? loadingProgress.cumulativeBytesLoaded /
+                                  loadingProgress.expectedTotalBytes!
+                              : null,
+                          strokeWidth: 2,
+                        ),
+                      ),
+                    );
+                  },
+                  errorBuilder: (context, error, stackTrace) {
+                    return Container(
+                      color: AppTheme.dividerColor,
+                      child: const Center(
+                        child: HugeIcon(
+                          icon: HugeIcons.strokeRoundedImageNotFound02,
+                          size: 24,
+                          color: AppTheme.textSecondary,
+                        ),
+                      ),
+                    );
+                  },
+                ),
+                if (media.isVideo)
+                  Container(
+                    color: Colors.black26,
+                    child: const Center(
+                      child: HugeIcon(
+                        icon: HugeIcons.strokeRoundedPlayCircle,
+                        color: Colors.white,
+                        size: 28,
+                      ),
+                    ),
+                  ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
   }
 }
