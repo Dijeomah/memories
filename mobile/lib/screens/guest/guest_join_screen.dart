@@ -4,6 +4,7 @@ import '../../config/app_routes.dart';
 import '../../config/app_theme.dart';
 import '../../providers/event_provider.dart';
 import '../../models/event.dart';
+import '../../services/guest_storage_service.dart';
 
 class GuestJoinScreen extends StatefulWidget {
   final Event event;
@@ -19,8 +20,38 @@ class _GuestJoinScreenState extends State<GuestJoinScreen> {
   final _nameController = TextEditingController();
   final _emailController = TextEditingController();
   final _phoneController = TextEditingController();
+  final _guestStorage = GuestStorageService();
 
   bool _isLoading = false;
+  bool _hasLoadedGuestInfo = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadGuestInfo();
+  }
+
+  Future<void> _loadGuestInfo() async {
+    final guestInfo = await _guestStorage.getGuestInfo();
+
+    if (guestInfo != null && mounted) {
+      setState(() {
+        _nameController.text = guestInfo['name'] ?? '';
+        _emailController.text = guestInfo['email'] ?? '';
+        _phoneController.text = guestInfo['phone'] ?? '';
+        _hasLoadedGuestInfo = true;
+      });
+
+      // Auto-submit if all required fields are filled
+      if (_nameController.text.isNotEmpty && _emailController.text.isNotEmpty) {
+        // Add a small delay to show the screen briefly before auto-joining
+        await Future.delayed(const Duration(milliseconds: 500));
+        if (mounted) {
+          _joinEvent();
+        }
+      }
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -92,9 +123,11 @@ class _GuestJoinScreenState extends State<GuestJoinScreen> {
                 ),
                 const SizedBox(height: 8),
                 Text(
-                  'Please provide your details to continue',
+                  _hasLoadedGuestInfo
+                      ? 'Using your saved information'
+                      : 'Please provide your details to continue',
                   style: AppTheme.bodyMedium.copyWith(
-                    color: AppTheme.textSecondary,
+                    color: _hasLoadedGuestInfo ? AppTheme.successColor : AppTheme.textSecondary,
                   ),
                   textAlign: TextAlign.center,
                 ),
@@ -186,6 +219,13 @@ class _GuestJoinScreenState extends State<GuestJoinScreen> {
               email: _emailController.text,
               phone: _phoneController.text.isNotEmpty ? _phoneController.text : null,
             );
+
+        // Save guest info for future use
+        await _guestStorage.saveGuestInfo(
+          name: _nameController.text,
+          email: _emailController.text,
+          phone: _phoneController.text.isNotEmpty ? _phoneController.text : null,
+        );
 
         if (mounted) {
           // Navigate to guest event view

@@ -5,6 +5,7 @@ import 'package:geolocator/geolocator.dart';
 import '../../config/app_routes.dart';
 import '../../config/app_theme.dart';
 import '../../providers/event_provider.dart';
+import '../../providers/auth_provider.dart';
 
 class ScanQRScreen extends StatefulWidget {
   const ScanQRScreen({super.key});
@@ -121,12 +122,48 @@ class _ScanQRScreenState extends State<ScanQRScreen> {
       );
 
       if (mounted) {
-        // Navigate to guest join screen
-        Navigator.pushReplacementNamed(
-          context,
-          AppRoutes.guestJoin,
-          arguments: event,
-        );
+        // Check if user is authenticated as a creator
+        final authProvider = context.read<AuthProvider>();
+        final isAuthenticated = authProvider.isAuthenticated;
+        final user = authProvider.user;
+
+        if (isAuthenticated && user != null) {
+          // User is a creator - automatically join with their creator info
+          try {
+            final result = await context.read<EventProvider>().joinEvent(
+              eventId: event.id,
+              name: user.name,
+              email: user.email,
+              phone: user.phone,
+            );
+
+            if (mounted) {
+              // Navigate directly to guest event screen
+              Navigator.pushReplacementNamed(
+                context,
+                AppRoutes.guestEvent,
+                arguments: {
+                  'event': event,
+                  'guestInfo': result,
+                },
+              );
+            }
+          } catch (e) {
+            if (mounted) {
+              setState(() => _isProcessing = false);
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(content: Text('Failed to join event: $e')),
+              );
+            }
+          }
+        } else {
+          // User is not authenticated - navigate to guest join screen
+          Navigator.pushReplacementNamed(
+            context,
+            AppRoutes.guestJoin,
+            arguments: event,
+          );
+        }
       }
     } catch (e, stackTrace) {
       if (mounted) {
