@@ -216,6 +216,24 @@ class EventProvider with ChangeNotifier {
     }
   }
 
+  // Fetch guest's own media
+  Future<void> fetchMyEventMedia(int id) async {
+    _isLoading = true;
+    _error = null;
+    notifyListeners();
+
+    try {
+      _eventMedia = await _eventService.getMyMedia(id);
+      _error = null;
+    } catch (e) {
+      _error = e.toString();
+      rethrow;
+    } finally {
+      _isLoading = false;
+      notifyListeners();
+    }
+  }
+
   // Fetch recent media across all events
   Future<void> fetchRecentMedia() async {
     _isLoading = true;

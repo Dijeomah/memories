@@ -133,6 +133,13 @@ class EventService {
     return data.map((json) => Media.fromJson(json)).toList();
   }
 
+  // Get guest's own media
+  Future<List<Media>> getMyMedia(int id) async {
+    final response = await _api.get(ApiConfig.myMedia(id));
+    final data = response['data'] as List;
+    return data.map((json) => Media.fromJson(json)).toList();
+  }
+
   // Get event guests
   Future<List<User>> getEventGuests(int id) async {
     final response = await _api.get(ApiConfig.eventGuests(id));

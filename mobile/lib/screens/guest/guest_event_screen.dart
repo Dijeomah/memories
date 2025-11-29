@@ -32,7 +32,7 @@ class _GuestEventScreenState extends State<GuestEventScreen> {
 
   void _loadEventMedia() {
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      context.read<EventProvider>().fetchEventMedia(widget.event.id);
+      context.read<EventProvider>().fetchMyEventMedia(widget.event.id);
     });
   }
 
@@ -77,7 +77,7 @@ class _GuestEventScreenState extends State<GuestEventScreen> {
           // Gallery with no spacing
           return RefreshIndicator(
             onRefresh: () async {
-              await context.read<EventProvider>().fetchEventMedia(widget.event.id);
+              await context.read<EventProvider>().fetchMyEventMedia(widget.event.id);
             },
             child: GridView.builder(
               padding: EdgeInsets.zero,
@@ -259,7 +259,7 @@ class _GuestEventScreenState extends State<GuestEventScreen> {
         Navigator.pop(context); // Close loading dialog
 
         // Auto-refresh to show uploaded media
-        await context.read<EventProvider>().fetchEventMedia(widget.event.id);
+        await context.read<EventProvider>().fetchMyEventMedia(widget.event.id);
 
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
