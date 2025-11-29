@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/svg.dart';
 import '../../config/app_routes.dart';
 import '../../config/app_theme.dart';
 
@@ -21,18 +22,24 @@ class GuestWelcomeScreen extends StatelessWidget {
                 const Spacer(),
                 // App Logo/Icon
                 Container(
-                  padding: const EdgeInsets.all(32),
+                  padding: const EdgeInsets.all(24),
                   decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(32),
+                    // color: Colors.white,
+                    borderRadius: BorderRadius.circular(24),
                   ),
-                  child: const Icon(
-                    Icons.photo_library,
-                    size: 80,
-                    color: AppTheme.primaryColor,
-                  ),
+                  child: SvgPicture.asset('assets/illustrations/scanners.svg',
+                    width: 200,
+                    // height: 200,
+                  )
+                  // SvgPicture.asset('assets/illustrations/scanners.svg'),
+
+                  // const Icon(
+                  //   Icons.photo_library,
+                  //   size: 80,
+                  //   color: AppTheme.primaryColor,
+                  // ),
                 ),
-                const SizedBox(height: 32),
+                // const SizedBox(height: 32),
                 // Welcome Text
                 const Text(
                   'Memories',

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/svg.dart';
 import '../config/app_routes.dart';
 import '../config/app_theme.dart';
 
@@ -30,13 +31,15 @@ class _SplashScreenState extends State<SplashScreen> {
         decoration: const BoxDecoration(
           gradient: AppTheme.primaryGradient,
         ),
-        child: const Center(
+        child: Center(
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Icon(Icons.photo_library, size: 100, color: Colors.white),
-              SizedBox(height: 20),
-              Text(
+              // add this svg: 'assets/illustrations/scanners.svg' below instead of the Icon
+              SvgPicture.asset('assets/illustrations/scanners.svg'),
+              // const Icon(Icons.photo_library, size: 100, color: Colors.white),
+              // const SizedBox(height: 20),
+              const Text(
                 'Memories',
                 style: TextStyle(
                   fontSize: 48,
@@ -44,8 +47,8 @@ class _SplashScreenState extends State<SplashScreen> {
                   color: Colors.white,
                 ),
               ),
-              SizedBox(height: 10),
-              Text(
+              const SizedBox(height: 10),
+              const Text(
                 'Share Your Moments',
                 style: TextStyle(fontSize: 18, color: Colors.white70),
               ),
